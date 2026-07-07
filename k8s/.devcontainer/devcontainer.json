@@ -5,7 +5,7 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:3": {
+    "ghcr.io/devcontainers/features/docker-in-docker:4": {
       "moby": false // https://github.com/devcontainers/features/issues/1660
     }
   }
