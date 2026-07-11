@@ -1,7 +1,12 @@
+# syntax=docker/dockerfile:1
+
 # https://mcr.microsoft.com/en-us/artifact/mar/devcontainers/base/about
 FROM mcr.microsoft.com/devcontainers/base:trixie
 
 ARG TARGETARCH
+ARG OPENCODE_SUFFIX
+ARG CODEX_SUFFIX
+ARG ZELLIJ_SUFFIX
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN <<EOF
@@ -66,31 +71,12 @@ packer plugins install github.com/hashicorp/qemu
 EOF
 
 # https://argo-cd.readthedocs.io/en/stable/cli_installation/
-RUN <<EOF
-set -xe
-ARCH=${TARGETARCH:-$(dpkg --print-architecture)}
-curl -fsSL -o /usr/local/bin/argocd "https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-${ARCH}"
-chmod +x /usr/local/bin/argocd
-EOF
-
-# https://github.com/bitnami-labs/sealed-secrets
-RUN <<EOF
-set -xe
-ARCH=${TARGETARCH:-$(dpkg --print-architecture)}
-KUBESEAL_VERSION=$(curl -fsSL https://api.github.com/repos/bitnami-labs/sealed-secrets/releases/latest | jq -r .tag_name | sed 's/^v//')
-curl -fsSL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-${ARCH}.tar.gz" | tar xz -C /usr/local/bin/
-chmod +x /usr/local/bin/kubeseal
-EOF
+ADD --chmod=755 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-${TARGETARCH} /usr/local/bin/argocd
 
 # https://github.com/zellij-org/zellij
+ADD --unpack=true https://github.com/zellij-org/zellij/releases/latest/download/zellij-${ZELLIJ_SUFFIX}.tar.gz /usr/local/bin/
 RUN <<EOF
 set -xe
-ARCH=${TARGETARCH:-$(dpkg --print-architecture)}
-case "${ARCH}" in
-  amd64) RUST_TARGET="x86_64-unknown-linux-musl" ;;
-  arm64) RUST_TARGET="aarch64-unknown-linux-musl" ;;
-esac
-curl -fsSL "https://github.com/zellij-org/zellij/releases/latest/download/zellij-${RUST_TARGET}.tar.gz" | tar xz -C /usr/local/bin/
 chmod +x /usr/local/bin/zellij
 zellij setup --generate-completion fish > /etc/fish/completions/zellij.fish
 EOF
@@ -98,39 +84,27 @@ EOF
 # https://kubevirt.io/user-guide/user_workloads/virtctl_client_tool/
 RUN <<EOF
 set -xe
-ARCH=${TARGETARCH:-$(dpkg --print-architecture)}
 export VERSION=$(curl https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
-curl -fsSL -o /usr/local/bin/virtctl "https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/virtctl-${VERSION}-linux-${ARCH}"
+curl -fsSL -o /usr/local/bin/virtctl "https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/virtctl-${VERSION}-linux-${TARGETARCH}"
 chmod +x /usr/local/bin/virtctl
-EOF
-
-# https://opencode.ai/download
-RUN <<EOF
-set -xe
-ARCH=${TARGETARCH:-$(dpkg --print-architecture)}
-case "${ARCH}" in
-  amd64) SUFFIX="linux-x64" ;;
-  arm64) SUFFIX="linux-arm64" ;;
-esac
-curl -fsSL "https://github.com/anomalyco/opencode/releases/latest/download/opencode-${SUFFIX}.tar.gz" | tar xz -C /usr/local/bin/
-chmod 755 /usr/local/bin/opencode
-EOF
-
-# https://developers.openai.com/codex/cli
-RUN <<EOF
-set -xe
-ARCH=${TARGETARCH:-$(dpkg --print-architecture)}
-case "${ARCH}" in
-  amd64) SUFFIX="x86_64-unknown-linux-musl" ;;
-  arm64) SUFFIX="aarch64-unknown-linux-musl" ;;
-esac
-curl -fsSL "https://github.com/openai/codex/releases/latest/download/codex-${SUFFIX}.tar.gz" | tar xz -C /tmp
-mv "/tmp/codex-${SUFFIX}" /usr/local/bin/codex
-chmod 755 /usr/local/bin/codex
 EOF
 
 # https://docs.astral.sh/uv/guides/integration/docker/
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-COPY setup-mirror.sh /opt/setup-mirror.sh
-RUN chmod 755 /opt/setup-mirror.sh
+COPY --chmod=755 setup-mirror.sh /opt/setup-mirror.sh
+
+# https://opencode.ai/download
+ADD --unpack=true https://github.com/anomalyco/opencode/releases/latest/download/opencode-${OPENCODE_SUFFIX}.tar.gz /usr/local/bin/
+RUN <<EOF
+set -xe
+chmod 755 /usr/local/bin/opencode
+EOF
+
+# https://developers.openai.com/codex/cli
+ADD --unpack=true https://github.com/openai/codex/releases/latest/download/codex-${CODEX_SUFFIX}.tar.gz /usr/local/bin/
+RUN <<EOF
+set -xe
+chmod 755 "/usr/local/bin/codex-${CODEX_SUFFIX}"
+ln -sf "codex-${CODEX_SUFFIX}" /usr/local/bin/codex
+EOF

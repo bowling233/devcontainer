@@ -1,7 +1,12 @@
 {
   "name": "k8s",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "args": {
+      "OPENCODE_SUFFIX": "${localEnv:OPENCODE_SUFFIX}",
+      "CODEX_SUFFIX": "${localEnv:CODEX_SUFFIX}",
+      "ZELLIJ_SUFFIX": "${localEnv:ZELLIJ_SUFFIX}"
+    }
   },
   "features": {
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},

@@ -2,7 +2,7 @@ name: Build Dev Container
 
 on:
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: "0 0 * * *"
   push:
     branches:
       - main
@@ -28,9 +28,15 @@ jobs:
           - arch: amd64
             runner: ubuntu-latest
             platform: linux/amd64
+            opencode_suffix: linux-x64
+            codex_suffix: x86_64-unknown-linux-musl
+            zellij_suffix: x86_64-unknown-linux-musl
           - arch: arm64
             runner: ubuntu-24.04-arm
             platform: linux/arm64
+            opencode_suffix: linux-arm64
+            codex_suffix: aarch64-unknown-linux-musl
+            zellij_suffix: aarch64-unknown-linux-musl
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
@@ -51,6 +57,10 @@ jobs:
 
       - name: Pre-build dev container image (${{ matrix.arch }})
         uses: devcontainers/ci@v0.3
+        env:
+          OPENCODE_SUFFIX: ${{ matrix.opencode_suffix }}
+          CODEX_SUFFIX: ${{ matrix.codex_suffix }}
+          ZELLIJ_SUFFIX: ${{ matrix.zellij_suffix }}
         with:
           subFolder: ${{ env.SUBFOLDER }}
           imageName: ${{ env.IMAGE_NAME }}
