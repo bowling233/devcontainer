@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
+# 用于 Devcontainer postStartCommand 在容器启动后设置镜像的脚本
+# 镜像不应在 Dockerfile 中设置，以免影响 GitHub Action 构建
+# Dockerfile 末尾也不行，因为 devcontainer.json 中的 feature 将在其后继续构建
+
 set -euo pipefail
 
 MIRROR="${MIRROR:-mirrors.cernet.edu.cn}"
-DEBIAN_MIRROR="http://${MIRROR}"
-DOCKER_MIRROR="http://${MIRROR}/docker-ce/linux/debian"
-PYPI_MIRROR="http://${MIRROR}/pypi/web/simple"
-NPM_REGISTRY="http://registry.npmmirror.com/"
+DEBIAN_MIRROR="https://${MIRROR}"
+DOCKER_MIRROR="https://${MIRROR}/docker-ce/linux/debian"
+PYPI_MIRROR="https://${MIRROR}/pypi/web/simple"
+NPM_REGISTRY="https://registry.npmmirror.com/"
 
 # shellcheck disable=SC1091
 . /etc/os-release
@@ -25,7 +29,6 @@ find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
 cat >/etc/pip.conf <<EOF
 [global]
 index-url = ${PYPI_MIRROR}
-trusted-host = ${MIRROR}
 EOF
 
 install -d -m 0755 /etc/uv
@@ -37,4 +40,11 @@ EOF
 
 cat >/etc/npmrc <<EOF
 registry=${NPM_REGISTRY}
+EOF
+
+# 环境变量型镜像注入到各 Shell 配置文件中
+
+cat <<EOF | tee -a /etc/profile /etc/fish/config.fish /etc/zsh/zshrc
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn
 EOF
