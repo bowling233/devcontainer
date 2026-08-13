@@ -40,6 +40,7 @@ apt-get install -y --no-install-recommends \
     npm
 apt-get autoremove -y
 apt-get distclean
+echo 'set -g mouse on' > /etc/tmux.conf
 EOF
 
 RUN <<EOF
@@ -112,4 +113,20 @@ chmod 755 \
     /usr/local/codex-resources/bwrap
 test -x /usr/local/bin/codex
 test -x /usr/local/bin/codex-code-mode-host
+EOF
+
+# https://claude.ai/install.sh
+RUN <<EOF
+set -xe
+case "${TARGETARCH}" in
+    amd64) CLAUDE_PLATFORM=linux-x64 ;;
+    arm64) CLAUDE_PLATFORM=linux-arm64 ;;
+    *) exit 1 ;;
+esac
+CLAUDE_VERSION=$(curl -fsSL https://downloads.claude.ai/claude-code-releases/latest)
+curl -fsSL \
+    "https://downloads.claude.ai/claude-code-releases/${CLAUDE_VERSION}/${CLAUDE_PLATFORM}/claude" \
+    -o /usr/local/bin/claude
+chmod 755 /usr/local/bin/claude
+claude --version
 EOF
