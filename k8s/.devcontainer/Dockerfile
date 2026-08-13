@@ -14,17 +14,48 @@ set -xe
 
 apt-get update
 apt-get install -y --no-install-recommends \
+    ca-certificates \
+    gnupg \
     curl \
     wget \
     jq \
     yq \
     git \
+    git-lfs \
     fish \
+    python-is-python3 \
+    python3-venv \
     python3-yaml \
     python3-dotenv \
     python3-pip \
     python3-jinja2 \
     python3 \
+    pipx \
+    build-essential \
+    pkg-config \
+    patch \
+    file \
+    less \
+    tree \
+    zip \
+    xz-utils \
+    zstd \
+    rsync \
+    openssh-client \
+    procps \
+    psmisc \
+    lsof \
+    strace \
+    iproute2 \
+    iputils-ping \
+    dnsutils \
+    netcat-openbsd \
+    socat \
+    mtr-tiny \
+    tcpdump \
+    openssl \
+    gettext-base \
+    sqlite3 \
     tmux \
     vim \
     btop \
