@@ -102,9 +102,14 @@ chmod 755 /usr/local/bin/opencode
 EOF
 
 # https://developers.openai.com/codex/cli
-ADD --unpack=true https://github.com/openai/codex/releases/latest/download/codex-${CODEX_SUFFIX}.tar.gz /usr/local/bin/
+ADD --unpack=true https://github.com/openai/codex/releases/latest/download/codex-package-${CODEX_SUFFIX}.tar.gz /usr/local/
 RUN <<EOF
 set -xe
-chmod 755 "/usr/local/bin/codex-${CODEX_SUFFIX}"
-ln -sf "codex-${CODEX_SUFFIX}" /usr/local/bin/codex
+chmod 755 \
+    /usr/local/bin/codex \
+    /usr/local/bin/codex-code-mode-host \
+    /usr/local/codex-path/rg \
+    /usr/local/codex-resources/bwrap
+test -x /usr/local/bin/codex
+test -x /usr/local/bin/codex-code-mode-host
 EOF
