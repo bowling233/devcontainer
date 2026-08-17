@@ -105,14 +105,6 @@ EOF
 # https://argo-cd.readthedocs.io/en/stable/cli_installation/
 ADD --chmod=755 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-${TARGETARCH} /usr/local/bin/argocd
 
-# https://github.com/zellij-org/zellij
-ADD --unpack=true https://github.com/zellij-org/zellij/releases/latest/download/zellij-${ZELLIJ_SUFFIX}.tar.gz /usr/local/bin/
-RUN <<EOF
-set -xe
-chmod +x /usr/local/bin/zellij
-zellij setup --generate-completion fish > /etc/fish/completions/zellij.fish
-EOF
-
 # https://kubevirt.io/user-guide/user_workloads/virtctl_client_tool/
 RUN <<EOF
 set -xe
