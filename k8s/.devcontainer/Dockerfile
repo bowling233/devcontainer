@@ -148,7 +148,10 @@ EOF
 # https://x.ai/cli/install.sh
 RUN <<EOF
 set -xe
-GROK_BIN_DIR=/usr/local/bin bash -c "\$(curl -fsSL https://x.ai/cli/install.sh)"
+curl -fsSL https://x.ai/cli/install.sh | GROK_BIN_DIR=/usr/local/bin bash
+if [ -e /usr/local/bin/agent ] || [ -L /usr/local/bin/agent ]; then
+    unlink /usr/local/bin/agent
+fi
 grok --version
 EOF
 
