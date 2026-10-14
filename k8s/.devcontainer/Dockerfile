@@ -145,14 +145,19 @@ ln -s ../lib/codex/codex-resources /usr/local/codex-resources
 ln -s ../lib/codex/bin/codex /usr/local/bin/codex
 EOF
 
-# https://x.ai/cli/install.sh
+# https://x.ai/cli
 RUN <<EOF
 set -xe
-curl -fsSL https://x.ai/cli/install.sh | GROK_BIN_DIR=/usr/local/bin bash
-GROK_BINARY=$(readlink -f /usr/local/bin/grok)
-install -m 755 "${GROK_BINARY}" /usr/local/bin/grok.system
-mv /usr/local/bin/grok.system /usr/local/bin/grok
-unlink /usr/local/bin/agent
+case "${TARGETARCH}" in
+    amd64) GROK_ARCH=x86_64 ;;
+    arm64) GROK_ARCH=aarch64 ;;
+    *) exit 1 ;;
+esac
+GROK_VERSION=$(curl -fsSL https://x.ai/cli/stable)
+curl -fsSL \
+    "https://x.ai/cli/grok-${GROK_VERSION}-linux-${GROK_ARCH}" \
+    -o /usr/local/bin/grok
+chmod 755 /usr/local/bin/grok
 grok --version
 EOF
 
