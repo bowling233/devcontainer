@@ -126,16 +126,30 @@ chmod 755 /usr/local/bin/opencode
 EOF
 
 # https://developers.openai.com/codex/cli
-ADD --unpack=true https://github.com/openai/codex/releases/latest/download/codex-package-${CODEX_SUFFIX}.tar.gz /usr/local/
+ADD --unpack=true https://github.com/openai/codex/releases/latest/download/codex-package-${CODEX_SUFFIX}.tar.gz /usr/local/lib/codex/
 RUN <<EOF
 set -xe
 chmod 755 \
-    /usr/local/bin/codex \
-    /usr/local/bin/codex-code-mode-host \
-    /usr/local/codex-path/rg \
-    /usr/local/codex-resources/bwrap
-test -x /usr/local/bin/codex
-test -x /usr/local/bin/codex-code-mode-host
+    /usr/local/lib/codex/bin/codex \
+    /usr/local/lib/codex/bin/codex-code-mode-host \
+    /usr/local/lib/codex/codex-path/rg \
+    /usr/local/lib/codex/codex-resources/bwrap
+test -x /usr/local/lib/codex/bin/codex
+test -x /usr/local/lib/codex/bin/codex-code-mode-host
+
+# Keep the upstream package root intact: Codex's app-server installer hashes
+# the complete tree containing codex-package.json.
+ln -s ../lib/codex/bin/codex-code-mode-host /usr/local/bin/codex-code-mode-host
+ln -s ../lib/codex/codex-path/rg /usr/local/codex-path
+ln -s ../lib/codex/codex-resources /usr/local/codex-resources
+ln -s ../lib/codex/bin/codex /usr/local/bin/codex
+EOF
+
+# https://x.ai/cli/install.sh
+RUN <<EOF
+set -xe
+GROK_BIN_DIR=/usr/local/bin bash -c "\$(curl -fsSL https://x.ai/cli/install.sh)"
+grok --version
 EOF
 
 # https://claude.ai/install.sh
