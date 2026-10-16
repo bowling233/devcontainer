@@ -9,15 +9,13 @@ on:
       - master
     paths:
       - k8s/**
-      - .github/workflows/devcontainer-k8s.yml
+      - k8s-packer/**
+      - .github/workflows/devcontainers.yml
   workflow_dispatch:
 
 permissions:
   contents: read
   packages: write
-
-env:
-  SUBFOLDER: k8s
 
 jobs:
   build:
@@ -25,18 +23,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: amd64
+          - subfolder: k8s
+            arch: amd64
+            runner: ubuntu-latest
+            platform: linux/amd64
+            opencode_suffix: linux-x64-musl
+            codex_suffix: x86_64-unknown-linux-musl
+          - subfolder: k8s
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            opencode_suffix: linux-arm64-musl
+            codex_suffix: aarch64-unknown-linux-musl
+          - subfolder: k8s-packer
+            arch: amd64
             runner: ubuntu-latest
             platform: linux/amd64
             opencode_suffix: linux-x64
             codex_suffix: x86_64-unknown-linux-musl
-            zellij_suffix: x86_64-unknown-linux-musl
-          - arch: arm64
+          - subfolder: k8s-packer
+            arch: arm64
             runner: ubuntu-24.04-arm
             platform: linux/arm64
             opencode_suffix: linux-arm64
             codex_suffix: aarch64-unknown-linux-musl
-            zellij_suffix: aarch64-unknown-linux-musl
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
@@ -53,16 +63,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lowercase image repository
-        run: echo "IMAGE_NAME=ghcr.io/$(echo '${{ github.repository }}/${{ env.SUBFOLDER }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        run: echo "IMAGE_NAME=ghcr.io/$(echo '${{ github.repository }}/${{ matrix.subfolder }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Pre-build dev container image (${{ matrix.arch }})
+      - name: Pre-build dev container image (${{ matrix.subfolder }} ${{ matrix.arch }})
         uses: devcontainers/ci@v0.3
         env:
           OPENCODE_SUFFIX: ${{ matrix.opencode_suffix }}
           CODEX_SUFFIX: ${{ matrix.codex_suffix }}
-          ZELLIJ_SUFFIX: ${{ matrix.zellij_suffix }}
         with:
-          subFolder: ${{ env.SUBFOLDER }}
+          subFolder: ${{ matrix.subfolder }}
           imageName: ${{ env.IMAGE_NAME }}
           imageTag: ${{ matrix.arch }}
           platform: ${{ matrix.platform }}
@@ -71,6 +80,10 @@ jobs:
 
   manifest:
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        subfolder: [k8s, k8s-packer]
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
@@ -84,7 +97,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lowercase image repository
-        run: echo "IMAGE_NAME=ghcr.io/$(echo '${{ github.repository }}/${{ env.SUBFOLDER }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        run: echo "IMAGE_NAME=ghcr.io/$(echo '${{ github.repository }}/${{ matrix.subfolder }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Create multi-platform manifest
         run: |

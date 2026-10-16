@@ -3,15 +3,11 @@
   "build": {
     "dockerfile": "Dockerfile",
     "args": {
+      "REGISTRY_PROXY": "${localEnv:REGISTRY_PROXY}",
+      "ALPINE_MIRROR": "${localEnv:ALPINE_MIRROR}",
       "OPENCODE_SUFFIX": "${localEnv:OPENCODE_SUFFIX}",
-      "CODEX_SUFFIX": "${localEnv:CODEX_SUFFIX}",
-      "ZELLIJ_SUFFIX": "${localEnv:ZELLIJ_SUFFIX}"
+      "CODEX_SUFFIX": "${localEnv:CODEX_SUFFIX}"
     }
   },
-  "features": {
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:4": {
-      "moby": false // https://github.com/devcontainers/features/issues/1660
-    }
-  }
+  "remoteUser": "vscode"
 }
